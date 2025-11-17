@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Container,
   Field,
@@ -10,6 +10,7 @@ import {
   Dialog,
   CloseButton,
   Badge,
+  Grid,
 } from "@chakra-ui/react";
 import { generateSchedule } from "./utils/schedule";
 import { getScheduleCsv, getScorecardCsv } from "./utils/csv";
@@ -87,8 +88,20 @@ function App() {
     Store.set("names", names);
   }, [results, schedule, rounds, players, isStarted, names]);
 
+  const sortedPlayers = useMemo(
+    () =>
+      genArr(players)
+        .map((p) => ({
+          id: p,
+          name: names[p],
+          scores: playerScores[p],
+        }))
+        .sort((a, b) => Math.sign(b.scores.total - a.scores.total)),
+    [players, names, playerScores],
+  );
+
   return (
-    <Container pt={6}>
+    <Container py={6}>
       <Stack gap={6}>
         <header>
           <Heading as="h1" size="2xl" fontWeight="bold">
@@ -170,9 +183,13 @@ function App() {
                         )}
                         <Table.Cell>
                           <Stack direction="row">
-                            {results[i].map((res) => (
-                              <Badge>{res.join(" - ")}</Badge>
-                            ))}
+                            {results[i].map((res) =>
+                              res.length ? (
+                                <Badge variant="outline">
+                                  {res.join(" - ")}
+                                </Badge>
+                              ) : null,
+                            )}
                             <ResultsEditor
                               round={i}
                               roundResult={results[i]}
@@ -204,15 +221,15 @@ function App() {
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
-                    {genArr(players).map((p) => (
-                      <Table.Row key={p}>
-                        <Table.Cell>{p + 1}</Table.Cell>
-                        <Table.Cell>{names[p] || "Unknown"}</Table.Cell>
-                        {playerScores[p].scores.map((score, j) => (
+                    {sortedPlayers.map((p) => (
+                      <Table.Row key={p.id}>
+                        <Table.Cell>{p.id + 1}</Table.Cell>
+                        <Table.Cell>{p.name || "Unknown"}</Table.Cell>
+                        {p.scores.scores.map((score, j) => (
                           <Table.Cell key={j}>{score}</Table.Cell>
                         ))}
                         <Table.Cell>
-                          <strong>{playerScores[p].total}</strong>
+                          <strong>{p.scores.total}</strong>
                         </Table.Cell>
                       </Table.Row>
                     ))}
@@ -222,7 +239,7 @@ function App() {
             </Stack>
           </>
         )}
-        <Stack direction="row">
+        <Stack gap={3}>
           {!isStarted && (
             <Button colorPalette="green" onClick={start}>
               Start
@@ -260,8 +277,10 @@ function App() {
               </Dialog.Positioner>
             </Dialog.Root>
           )}
-          <Button onClick={downloadScorecard}>Download scorecard</Button>
-          <Button onClick={downloadSchedule}>Download schedule</Button>
+          <Grid templateColumns="1fr 1fr" gap={3}>
+            <Button onClick={downloadScorecard}>Download scorecard</Button>
+            <Button onClick={downloadSchedule}>Download schedule</Button>
+          </Grid>
         </Stack>
       </Stack>
     </Container>

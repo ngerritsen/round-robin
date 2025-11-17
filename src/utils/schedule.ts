@@ -56,7 +56,7 @@ export const generateSchedule = (players: number, rounds: number): Schedule => {
       }
 
       teams.push(team);
-      seed = inShuffle(rotate(seed));
+      seed = inShuffle(rotate(seed.reverse()));
     }
 
     for (let t = 0; t < teamCount; t++) {
