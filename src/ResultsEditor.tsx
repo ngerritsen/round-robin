@@ -1,22 +1,17 @@
-import {
-  Field,
-  Input,
-  Stack,
-  Button,
-  Dialog,
-  CloseButton,
-} from "@chakra-ui/react";
+import { Field, Input, Stack, Button, Dialog, CloseButton, Grid } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import type { RoundResult } from "./types";
+import type { RoundResult, Schedule } from "./types";
 
 type Props = {
   onSave: (result: RoundResult) => void;
   roundResult: RoundResult;
   round: number;
   isSubRound: boolean;
+  schedule: Schedule;
+  names: string[];
 };
 
-const ResultsEditor = ({ round, onSave, roundResult, isSubRound }: Props) => {
+const ResultsEditor = ({ round, onSave, roundResult, isSubRound, schedule, names }: Props) => {
   const defaultValue = isSubRound ? [0, 0] : [0, 0, 0, 0];
   const [results, setResults] = useState<number[]>(
     roundResult.length ? roundResult.flat() : defaultValue,
@@ -34,6 +29,22 @@ const ResultsEditor = ({ round, onSave, roundResult, isSubRound }: Props) => {
     setResults(results.map((r, i) => (i === index ? result : r)));
   };
 
+  const renderField = (index: number) => (
+    <Field.Root>
+      <Field.Label>Team {String.fromCharCode(65 + index)}</Field.Label>
+      <Input
+        type="number"
+        defaultValue={0}
+        value={results[index]}
+        step={1}
+        onChange={(e) => setResult(Number(e.target.value), index)}
+      />
+      <Field.HelperText>
+        {schedule[round].teams[index].map((p) => names[p] || "?").join(", ")}
+      </Field.HelperText>
+    </Field.Root>
+  );
+
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
@@ -49,56 +60,16 @@ const ResultsEditor = ({ round, onSave, roundResult, isSubRound }: Props) => {
             <Dialog.Title>Round {round + 1} results</Dialog.Title>
           </Dialog.Header>
           <Dialog.Body>
-            <Stack>
-              <Stack direction="row">
-                <Field.Root>
-                  <Field.Label>Team A</Field.Label>
-                  <Input
-                    type="number"
-                    defaultValue={0}
-                    value={results[0]}
-                    step={1}
-                    onChange={(e) => setResult(Number(e.target.value), 0)}
-                  />
-                </Field.Root>
-                <Field.Root>
-                  <Field.Label>Team B</Field.Label>
-                  <Input
-                    type="number"
-                    defaultValue={0}
-                    value={results[1]}
-                    step={1}
-                    onChange={(e) => setResult(Number(e.target.value), 1)}
-                  />
-                </Field.Root>
-              </Stack>
+            <Grid templateColumns="1fr 1fr" gap={3}>
+              {renderField(0)}
+              {renderField(1)}
               {!isSubRound && (
                 <>
-                  <Stack direction="row">
-                    <Field.Root>
-                      <Field.Label>Team C</Field.Label>
-                      <Input
-                        type="number"
-                        defaultValue={0}
-                        value={results[2]}
-                        step={1}
-                        onChange={(e) => setResult(Number(e.target.value), 2)}
-                      />
-                    </Field.Root>
-                    <Field.Root>
-                      <Field.Label>Team D</Field.Label>
-                      <Input
-                        type="number"
-                        defaultValue={0}
-                        value={results[3]}
-                        step={1}
-                        onChange={(e) => setResult(Number(e.target.value), 3)}
-                      />
-                    </Field.Root>
-                  </Stack>
+                  {renderField(2)}
+                  {renderField(3)}
                 </>
               )}
-            </Stack>
+            </Grid>
           </Dialog.Body>
           <Dialog.Footer>
             <Dialog.ActionTrigger>

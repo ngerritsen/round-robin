@@ -19,25 +19,14 @@ import type { Results, RoundResult, Schedule } from "./types";
 import { getPlayerScores } from "./utils/score";
 import { genArr } from "./utils/array";
 import ResultsEditor from "./ResultsEditor";
+import * as Store from "./utils/store";
 
-const Store = {
-  get: (name: string) => {
-    const data = localStorage.getItem(name);
-    return data ? JSON.parse(data) : undefined;
-  },
-  set: (name: string, value: any) => {
-    localStorage.setItem(name, JSON.stringify(value));
-  },
-};
-
-function App() {
+const App = () => {
   const [isStarted, setIsStarted] = useState(Store.get("isStarted") || false);
   const [players, setPlayers] = useState(Store.get("players") || 10);
   const [results, setResults] = useState<Results>(Store.get("results") || []);
   const [rounds, setRounds] = useState(Store.get("rounds") || 8);
-  const [schedule, setSchedule] = useState<Schedule>(
-    Store.get("schedule") || [],
-  );
+  const [schedule, setSchedule] = useState<Schedule>(Store.get("schedule") || []);
   const [names, setNames] = useState<string[]>(Store.get("names") || []);
 
   const hasSubs = schedule[0]?.subs.length > 0;
@@ -45,9 +34,7 @@ function App() {
   const playerScores = getPlayerScores(schedule, results, players);
 
   const setPlayerName = (name: string, playerIndex: number) => {
-    setNames(
-      genArr(players).map((i) => (i === playerIndex ? name : names[i] || "")),
-    );
+    setNames(genArr(players).map((i) => (i === playerIndex ? name : names[i] || "")));
   };
 
   const start = () => {
@@ -62,10 +49,7 @@ function App() {
   };
 
   const downloadSchedule = () => {
-    downloadAsFile(
-      `round-robin-schedule-${players}-${rounds}.csv`,
-      getScheduleCsv(schedule),
-    );
+    downloadAsFile(`round-robin-schedule-${players}-${rounds}.csv`, getScheduleCsv(schedule));
   };
 
   const downloadScorecard = () => {
@@ -172,22 +156,16 @@ function App() {
                       <Table.Row key={i}>
                         <Table.Cell>{i + 1}</Table.Cell>
                         {round.teams.map((team, j) => (
-                          <Table.Cell key={j}>
-                            {team.map((p) => p + 1).join(", ")}
-                          </Table.Cell>
+                          <Table.Cell key={j}>{team.map((p) => p + 1).join(", ")}</Table.Cell>
                         ))}
                         {hasSubs && (
-                          <Table.Cell>
-                            {round.subs.map((s) => s + 1).join(", ")}
-                          </Table.Cell>
+                          <Table.Cell>{round.subs.map((s) => s + 1).join(", ")}</Table.Cell>
                         )}
                         <Table.Cell>
                           <Stack direction="row">
                             {results[i].map((res) =>
                               res.length ? (
-                                <Badge variant="outline">
-                                  {res.join(" - ")}
-                                </Badge>
+                                <Badge variant="outline">{res.join(" - ")}</Badge>
                               ) : null,
                             )}
                             <ResultsEditor
@@ -195,6 +173,8 @@ function App() {
                               roundResult={results[i]}
                               onSave={(result) => setResult(result, i)}
                               isSubRound={hasSubs && i === results.length - 1}
+                              schedule={schedule}
+                              names={names}
                             />
                           </Stack>
                         </Table.Cell>
@@ -257,9 +237,7 @@ function App() {
                   <Dialog.Header>
                     <Dialog.Title>Stop</Dialog.Title>
                   </Dialog.Header>
-                  <Dialog.Body>
-                    Are you sure you want to stop the round robin?
-                  </Dialog.Body>
+                  <Dialog.Body>Are you sure you want to stop the round robin?</Dialog.Body>
                   <Dialog.Footer>
                     <Dialog.ActionTrigger>
                       <Stack direction="row">
@@ -285,6 +263,6 @@ function App() {
       </Stack>
     </Container>
   );
-}
+};
 
 export default App;
