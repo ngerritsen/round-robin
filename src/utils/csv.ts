@@ -1,41 +1,31 @@
-import type { Schedule } from "../types";
-import { genArr } from "./array";
+import type { Schedule, PlayerScore } from "../types";
+import { genArr, increment } from "./array";
+import { getTeamName } from "./string";
+
+type Row = (string | number)[];
 
 export const getScheduleCsv = (schedule: Schedule) => {
   const hasSubs = schedule[0].subs.length > 0;
   const heading = [
     "Round",
-    "Team A",
-    "Pt.",
-    "Team B",
-    "Pt.",
-    "Team C",
-    "Pt.",
-    "Team D",
-    "Pt.",
+    ...genArr(4).flatMap((t) => [getTeamName(t), "Pts."]),
     ...(hasSubs ? ["Sub"] : []),
     "A - B",
     "C - D",
   ];
 
-  const rows = schedule.map((round, i) =>
-    [
-      i + 1,
-      ...round.teams.flatMap((t) => [
-        `"${t.map((p) => p + 1).join(", ")}"`,
-        "",
-      ]),
-      ...(hasSubs ? `"${round.subs.map((s) => s + 1).join(" ,")}"` : []),
-      "",
-      "",
-    ].join(","),
-  );
+  const rows = schedule.map((round, i) => [
+    i + 1,
+    ...round.teams.flatMap((t) => [increment(t).join(", "), ""]),
+    ...(hasSubs ? [increment(round.subs).join(" ,")] : []),
+    ...genArr(2, ""),
+  ]);
 
-  return heading + "\n" + rows.join("\n");
+  return toCsv(heading, rows);
 };
 
 export const getScorecardCsv = (schedule: Schedule, players: number) => {
-  const heading = ["Player", "Name", ...schedule.map((_, i) => i + 1), "Total"];
+  const heading = ["Player", "Name", ...increment(genArr(schedule.length)), "Total"];
 
   const rows = genArr(players).map((p) => [
     p + 1,
@@ -44,5 +34,15 @@ export const getScorecardCsv = (schedule: Schedule, players: number) => {
     "",
   ]);
 
-  return heading + "\n" + rows.join("\n");
+  return toCsv(heading, rows);
 };
+
+export const getScoreCsv = (scores: PlayerScore[]) => {
+  const heading = ["id", "name", ...increment(genArr(scores[0].scores.length)), "total"];
+  const rows = scores.map((s) => [s.id, s.name, ...s.scores.map((s) => s ?? ""), s.total]);
+
+  return toCsv(heading, rows);
+};
+
+const toCsv = (headings: Row, rows: Row[]) =>
+  [headings, ...rows].map((row) => row.map((row) => `"${row}"`).join(",")).join("\n");

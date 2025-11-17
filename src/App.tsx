@@ -7,19 +7,21 @@ import {
   Table,
   Heading,
   Button,
-  Dialog,
-  CloseButton,
   Badge,
   Grid,
+  InputGroup,
 } from "@chakra-ui/react";
 import { generateSchedule } from "./utils/schedule";
-import { getScheduleCsv, getScorecardCsv } from "./utils/csv";
+import { getScheduleCsv, getScorecardCsv, getScoreCsv } from "./utils/csv";
 import { downloadAsFile } from "./utils/download";
 import type { Results, RoundResult, Schedule } from "./types";
 import { getPlayerScores } from "./utils/score";
 import { genArr } from "./utils/array";
 import ResultsEditor from "./ResultsEditor";
 import * as Store from "./utils/store";
+import StopDialog from "./StopDialog";
+import Header from "./Header";
+import { getTeamName } from "./utils/string";
 
 const App = () => {
   const [isStarted, setIsStarted] = useState(Store.get("isStarted") || false);
@@ -31,7 +33,10 @@ const App = () => {
 
   const hasSubs = schedule[0]?.subs.length > 0;
 
-  const playerScores = getPlayerScores(schedule, results, players);
+  const playerScores = useMemo(
+    () => getPlayerScores(schedule, results, players, names),
+    [schedule, results, players, names],
+  );
 
   const setPlayerName = (name: string, playerIndex: number) => {
     setNames(genArr(players).map((i) => (i === playerIndex ? name : names[i] || "")));
@@ -59,6 +64,10 @@ const App = () => {
     );
   };
 
+  const downloadScores = () => {
+    downloadAsFile(`round-robin-scores-${players}-${rounds}.csv`, getScoreCsv(playerScores));
+  };
+
   const setResult = (result: RoundResult, index: number) => {
     setResults(results.map((r, i) => (index === i ? result : r)));
   };
@@ -73,33 +82,22 @@ const App = () => {
   }, [results, schedule, rounds, players, isStarted, names]);
 
   const sortedPlayers = useMemo(
-    () =>
-      genArr(players)
-        .map((p) => ({
-          id: p,
-          name: names[p],
-          scores: playerScores[p],
-        }))
-        .sort((a, b) => Math.sign(b.scores.total - a.scores.total)),
-    [players, names, playerScores],
+    () => playerScores.sort((a, b) => Math.sign(b.total - a.total)),
+    [playerScores],
   );
 
   return (
     <Container py={6}>
       <Stack gap={6}>
-        <header>
-          <Heading as="h1" size="2xl" fontWeight="bold">
-            🏆 Round robin
-          </Heading>
-        </header>
+        <Header />
         {!isStarted && (
           <Stack>
             <Stack direction="row">
               <Field.Root>
                 <Field.Label>Players</Field.Label>
                 <Input
-                  type="number"
-                  defaultValue={10}
+                  inputMode="numeric"
+                  value={players}
                   step={1}
                   min={8}
                   max={20}
@@ -109,25 +107,25 @@ const App = () => {
               <Field.Root>
                 <Field.Label>Rounds</Field.Label>
                 <Input
-                  type="number"
-                  defaultValue={8}
+                  inputMode="numeric"
+                  value={rounds}
                   step={2}
                   min={6}
-                  max={players}
+                  max={10}
                   onChange={(e) => setRounds(Number(e.target.value))}
                 />
               </Field.Root>
             </Stack>
             <Stack>
               {genArr(players).map((i) => (
-                <Field.Root key={i}>
+                <InputGroup key={i} startAddon={i + 1}>
                   <Input
                     placeholder={`Player ${i + 1} name`}
                     value={names[i]}
                     type="text"
                     onChange={(e) => setPlayerName(e.target.value, i)}
                   />
-                </Field.Root>
+                </InputGroup>
               ))}
             </Stack>
           </Stack>
@@ -141,14 +139,14 @@ const App = () => {
               <Table.ScrollArea borderWidth="1px">
                 <Table.Root variant="outline" striped={true}>
                   <Table.Header>
-                    <Table.Row>
+                    <Table.Row bg="bg.emphasized">
                       <Table.ColumnHeader>Round</Table.ColumnHeader>
-                      <Table.ColumnHeader>Team A</Table.ColumnHeader>
-                      <Table.ColumnHeader>Team B</Table.ColumnHeader>
-                      <Table.ColumnHeader>Team C</Table.ColumnHeader>
-                      <Table.ColumnHeader>Team D</Table.ColumnHeader>
+                      {genArr(4).map((t) => (
+                        <Table.ColumnHeader>{getTeamName(t)}</Table.ColumnHeader>
+                      ))}
                       {hasSubs && <Table.ColumnHeader>Subs</Table.ColumnHeader>}
                       <Table.ColumnHeader>Results</Table.ColumnHeader>
+                      <Table.ColumnHeader></Table.ColumnHeader>
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
@@ -168,6 +166,10 @@ const App = () => {
                                 <Badge variant="outline">{res.join(" - ")}</Badge>
                               ) : null,
                             )}
+                          </Stack>
+                        </Table.Cell>
+                        <Table.Cell width={6}>
+                          <Stack direction="row" justifyContent="end">
                             <ResultsEditor
                               round={i}
                               roundResult={results[i]}
@@ -190,7 +192,7 @@ const App = () => {
               </Heading>
               <Table.ScrollArea borderWidth="1px">
                 <Table.Root variant="outline" striped={true}>
-                  <Table.Header>
+                  <Table.Header bg="bg.emphasized">
                     <Table.Row>
                       <Table.ColumnHeader>#</Table.ColumnHeader>
                       <Table.ColumnHeader>Player</Table.ColumnHeader>
@@ -205,12 +207,10 @@ const App = () => {
                       <Table.Row key={p.id}>
                         <Table.Cell>{p.id + 1}</Table.Cell>
                         <Table.Cell>{p.name || "Unknown"}</Table.Cell>
-                        {p.scores.scores.map((score, j) => (
+                        {p.scores.map((score, j) => (
                           <Table.Cell key={j}>{score}</Table.Cell>
                         ))}
-                        <Table.Cell>
-                          <strong>{p.scores.total}</strong>
-                        </Table.Cell>
+                        <Table.Cell fontWeight="bold"> {p.total} </Table.Cell>
                       </Table.Row>
                     ))}
                   </Table.Body>
@@ -225,39 +225,19 @@ const App = () => {
               Start
             </Button>
           )}
-          {isStarted && (
-            <Dialog.Root>
-              <Dialog.Trigger asChild>
-                <Button colorPalette="red">Stop</Button>
-              </Dialog.Trigger>
-              <Dialog.Backdrop />
-              <Dialog.Positioner>
-                <Dialog.Content>
-                  <Dialog.CloseTrigger />
-                  <Dialog.Header>
-                    <Dialog.Title>Stop</Dialog.Title>
-                  </Dialog.Header>
-                  <Dialog.Body>Are you sure you want to stop the round robin?</Dialog.Body>
-                  <Dialog.Footer>
-                    <Dialog.ActionTrigger>
-                      <Stack direction="row">
-                        <Button colorPalette="red" onClick={stop}>
-                          Yes
-                        </Button>
-                        <Button>Cancel</Button>
-                      </Stack>
-                    </Dialog.ActionTrigger>
-                  </Dialog.Footer>
-                  <Dialog.CloseTrigger>
-                    <CloseButton />
-                  </Dialog.CloseTrigger>
-                </Dialog.Content>
-              </Dialog.Positioner>
-            </Dialog.Root>
-          )}
           <Grid templateColumns="1fr 1fr" gap={3}>
-            <Button onClick={downloadScorecard}>Download scorecard</Button>
-            <Button onClick={downloadSchedule}>Download schedule</Button>
+            {!isStarted && (
+              <>
+                <Button onClick={downloadScorecard}>Download scorecard</Button>
+                <Button onClick={downloadSchedule}>Download schedule</Button>
+              </>
+            )}
+            {isStarted && (
+              <>
+                <Button onClick={downloadScores}>Download scores</Button>
+                <StopDialog stop={stop} />
+              </>
+            )}
           </Grid>
         </Stack>
       </Stack>

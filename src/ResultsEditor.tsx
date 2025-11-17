@@ -1,6 +1,9 @@
-import { Field, Input, Stack, Button, Dialog, CloseButton, Grid } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { Field, Input, Stack, Button, Dialog, Grid, IconButton } from "@chakra-ui/react";
 import type { RoundResult, Schedule } from "./types";
+import Modal from "./components/Modal";
+import { getTeamName } from "./utils/string";
+import { genArr } from "./utils/array";
 
 type Props = {
   onSave: (result: RoundResult) => void;
@@ -12,7 +15,7 @@ type Props = {
 };
 
 const ResultsEditor = ({ round, onSave, roundResult, isSubRound, schedule, names }: Props) => {
-  const defaultValue = isSubRound ? [0, 0] : [0, 0, 0, 0];
+  const defaultValue = isSubRound ? genArr(2, 0) : genArr(4, 0);
   const [results, setResults] = useState<number[]>(
     roundResult.length ? roundResult.flat() : defaultValue,
   );
@@ -31,12 +34,10 @@ const ResultsEditor = ({ round, onSave, roundResult, isSubRound, schedule, names
 
   const renderField = (index: number) => (
     <Field.Root>
-      <Field.Label>Team {String.fromCharCode(65 + index)}</Field.Label>
+      <Field.Label>{getTeamName(index)}</Field.Label>
       <Input
-        type="number"
-        defaultValue={0}
+        inputMode="numeric"
         value={results[index]}
-        step={1}
         onChange={(e) => setResult(Number(e.target.value), index)}
       />
       <Field.HelperText>
@@ -46,47 +47,36 @@ const ResultsEditor = ({ round, onSave, roundResult, isSubRound, schedule, names
   );
 
   return (
-    <Dialog.Root>
-      <Dialog.Trigger asChild>
-        <Button variant="surface" size="xs">
+    <Modal
+      trigger={
+        <IconButton bg="bg.emphasized" size="xs" rounded="full">
           ✏️
-        </Button>
-      </Dialog.Trigger>
-      <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content>
-          <Dialog.CloseTrigger />
-          <Dialog.Header>
-            <Dialog.Title>Round {round + 1} results</Dialog.Title>
-          </Dialog.Header>
-          <Dialog.Body>
-            <Grid templateColumns="1fr 1fr" gap={3}>
-              {renderField(0)}
-              {renderField(1)}
-              {!isSubRound && (
-                <>
-                  {renderField(2)}
-                  {renderField(3)}
-                </>
-              )}
-            </Grid>
-          </Dialog.Body>
-          <Dialog.Footer>
-            <Dialog.ActionTrigger>
-              <Stack direction="row">
-                <Button colorPalette="blue" onClick={save}>
-                  Save
-                </Button>
-                <Button>Cancel</Button>
-              </Stack>
-            </Dialog.ActionTrigger>
-          </Dialog.Footer>
-          <Dialog.CloseTrigger>
-            <CloseButton />
-          </Dialog.CloseTrigger>
-        </Dialog.Content>
-      </Dialog.Positioner>
-    </Dialog.Root>
+        </IconButton>
+      }
+      title={`Round ${round + 1}`}
+      body={
+        <Grid templateColumns="1fr 1fr" gap={3}>
+          {renderField(0)}
+          {renderField(1)}
+          {!isSubRound && (
+            <>
+              {renderField(2)}
+              {renderField(3)}
+            </>
+          )}
+        </Grid>
+      }
+      footer={
+        <Dialog.ActionTrigger>
+          <Stack direction="row">
+            <Button colorPalette="blue" onClick={save}>
+              Save
+            </Button>
+            <Button>Cancel</Button>
+          </Stack>
+        </Dialog.ActionTrigger>
+      }
+    />
   );
 };
 

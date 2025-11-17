@@ -1,25 +1,26 @@
 import { genArr } from "./array";
-import type { Result, Results, Schedule } from "../types";
+import type { PlayerScore, Result, Results, Schedule } from "../types";
 
 export const getPlayerScores = (
   schedule: Schedule,
   results: Results,
   players: number,
-) => {
-  const roundScores = results.map((result) =>
-    result.flatMap(getScoresForResult),
-  );
+  names: string[],
+): PlayerScore[] => {
+  const roundScores = results.map((result) => result.flatMap(getScoresForResult));
 
-  return genArr(players).map((p) => {
-    const scores = schedule.map((rounds, i) => {
-      const t = rounds.teams.findIndex((t) => t.includes(p));
-      return roundScores[i]?.[t];
-    });
+  return genArr(players)
+    .map((p) => {
+      const scores = schedule.map((rounds, i) => {
+        const t = rounds.teams.findIndex((t) => t.includes(p));
+        return roundScores[i]?.[t];
+      });
 
-    const total = scores.reduce((tot, s) => tot + (s || 0), 0);
+      const total = scores.reduce((tot, s) => tot + (s || 0), 0);
 
-    return { scores, total };
-  });
+      return { id: p, scores, total, name: names[p] };
+    })
+    .sort((a, b) => Math.sign(a.total - b.total));
 };
 
 const getScoresForResult = (result: Result | undefined) => {

@@ -1,8 +1,8 @@
 import type { Schedule, Round, Team } from "../types";
-import { genArr, inShuffle, rotate } from "./array";
+import { genArr, inShuffle } from "./array";
 
 export const generateSchedule = (players: number, rounds: number): Schedule => {
-  const getZeroScores = () => genArr(players).map(() => 0);
+  const getZeroScores = () => genArr(players, 0);
   const playersOpponents: number[][] = genArr(players).map(getZeroScores);
   const playersTeammates: number[][] = genArr(players).map(getZeroScores);
 
@@ -39,9 +39,7 @@ export const generateSchedule = (players: number, rounds: number): Schedule => {
             : 0;
 
           const teammateCost =
-            team.length > 0
-              ? team.reduce((tot, t) => tot + playersTeammates[c][t], 0)
-              : 0;
+            team.length > 0 ? team.reduce((tot, t) => tot + playersTeammates[c][t], 0) : 0;
 
           const cost = opponentCost + teammateCost;
 
@@ -56,7 +54,7 @@ export const generateSchedule = (players: number, rounds: number): Schedule => {
       }
 
       teams.push(team);
-      seed = inShuffle(rotate(seed.reverse()));
+      seed = inShuffle(inShuffle(inShuffle(seed)));
     }
 
     for (let t = 0; t < teamCount; t++) {
