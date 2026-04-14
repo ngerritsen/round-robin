@@ -96,7 +96,7 @@ const TournamentPage = () => {
             {sortedPlayers.map((p) => (
               <TableRow key={p.id}>
                 <TableCell>{p.id + 1}</TableCell>
-                <TableCell>{p.name || "Unknown"}</TableCell>
+                <TableCell className="whitespace-normal break-all">{p.name || "Unknown"}</TableCell>
                 {p.scores.map((score, j) => (
                   <TableCell key={j}>{score}</TableCell>
                 ))}
