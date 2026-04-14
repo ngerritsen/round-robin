@@ -40,7 +40,7 @@ const ResultsEditor = ({ round, onSave, roundResult, isSubRound, schedule, names
         value={results[index]}
         onChange={(e) => setResult(Number(e.target.value), index)}
       />
-      <Field.HelperText>
+      <Field.HelperText style={{ whiteSpace: "normal" }}>
         {schedule[round].teams[index].map((p) => names[p] || "?").join(", ")}
       </Field.HelperText>
     </Field.Root>
