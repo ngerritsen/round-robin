@@ -1,11 +1,21 @@
-import { Field, Input, Stack, Button, Grid, InputGroup } from "@chakra-ui/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAppContext } from "../AppContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { genArr } from "../utils/array";
 
 const SetupPage = () => {
-  const { players, setPlayers, rounds, setRounds, names, setPlayerName, start, downloadScorecard, downloadSchedule } =
-    useAppContext();
+  const {
+    players,
+    setPlayers,
+    rounds,
+    setRounds,
+    names,
+    setPlayerName,
+    start,
+    downloadScorecard,
+    downloadSchedule,
+  } = useAppContext();
   const navigate = useNavigate();
 
   const handleStart = () => {
@@ -14,55 +24,55 @@ const SetupPage = () => {
   };
 
   return (
-    <Stack>
-      <Stack>
-        <Stack direction="row">
-          <Field.Root>
-            <Field.Label>Players</Field.Label>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-3">
+          <div className="flex flex-1 flex-col gap-1.5">
+            <label className="text-sm font-medium">Players</label>
             <Input
               inputMode="numeric"
               value={players}
-              step={1}
-              min={8}
-              max={20}
               onChange={(e) => setPlayers(Number(e.target.value))}
             />
-          </Field.Root>
-          <Field.Root>
-            <Field.Label>Rounds</Field.Label>
+          </div>
+          <div className="flex flex-1 flex-col gap-1.5">
+            <label className="text-sm font-medium">Rounds</label>
             <Input
               inputMode="numeric"
               value={rounds}
-              step={2}
-              min={6}
-              max={10}
               onChange={(e) => setRounds(Number(e.target.value))}
             />
-          </Field.Root>
-        </Stack>
-        <Stack>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
           {genArr(players).map((i) => (
-            <InputGroup key={i} startAddon={i + 1}>
+            <div key={i} className="flex">
+              <span className="flex select-none items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-sm text-muted-foreground">
+                {i + 1}
+              </span>
               <Input
+                className="rounded-l-none"
                 placeholder={`Player ${i + 1} name`}
                 value={names[i]}
                 type="text"
                 onChange={(e) => setPlayerName(e.target.value, i)}
               />
-            </InputGroup>
+            </div>
           ))}
-        </Stack>
-      </Stack>
-      <Stack gap={3}>
-        <Button colorPalette="green" onClick={handleStart}>
-          Start
-        </Button>
-        <Grid templateColumns="1fr 1fr" gap={3}>
-          <Button onClick={downloadScorecard}>Download scorecard</Button>
-          <Button onClick={downloadSchedule}>Download schedule</Button>
-        </Grid>
-      </Stack>
-    </Stack>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3">
+        <Button onClick={handleStart}>Start</Button>
+        <div className="grid grid-cols-2 gap-3">
+          <Button variant="outline" onClick={downloadScorecard}>
+            Download scorecard
+          </Button>
+          <Button variant="outline" onClick={downloadSchedule}>
+            Download schedule
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 

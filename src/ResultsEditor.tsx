@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Field, Input, Stack, Button, Dialog, Grid, IconButton } from "@chakra-ui/react";
 import type { RoundResult, Schedule } from "./types";
 import Modal from "./components/Modal";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { DialogClose } from "./components/ui/dialog";
 import { getTeamName } from "./utils/string";
 import { genArr } from "./utils/array";
 
@@ -33,29 +35,29 @@ const ResultsEditor = ({ round, onSave, roundResult, isSubRound, schedule, names
   };
 
   const renderField = (index: number) => (
-    <Field.Root>
-      <Field.Label>{getTeamName(index)}</Field.Label>
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium">{getTeamName(index)}</label>
       <Input
         inputMode="numeric"
         value={results[index]}
         onChange={(e) => setResult(Number(e.target.value), index)}
       />
-      <Field.HelperText style={{ whiteSpace: "normal" }}>
+      <p className="text-xs text-muted-foreground" style={{ whiteSpace: "normal" }}>
         {schedule[round].teams[index].map((p) => names[p] || "?").join(", ")}
-      </Field.HelperText>
-    </Field.Root>
+      </p>
+    </div>
   );
 
   return (
     <Modal
       trigger={
-        <IconButton bg="bg.emphasized" size="xs" rounded="full">
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-base">
           ✏️
-        </IconButton>
+        </Button>
       }
       title={`Round ${round + 1}`}
       body={
-        <Grid templateColumns="1fr 1fr" gap={3}>
+        <div className="grid grid-cols-2 gap-4">
           {renderField(0)}
           {renderField(1)}
           {!isSubRound && (
@@ -64,17 +66,17 @@ const ResultsEditor = ({ round, onSave, roundResult, isSubRound, schedule, names
               {renderField(3)}
             </>
           )}
-        </Grid>
+        </div>
       }
       footer={
-        <Dialog.ActionTrigger>
-          <Stack direction="row">
-            <Button colorPalette="blue" onClick={save}>
-              Save
-            </Button>
-            <Button>Cancel</Button>
-          </Stack>
-        </Dialog.ActionTrigger>
+        <div className="flex gap-2">
+          <DialogClose asChild>
+            <Button onClick={save}>Save</Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+        </div>
       }
     />
   );

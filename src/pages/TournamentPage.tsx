@@ -1,8 +1,17 @@
-import { Stack, Table, Heading, Button, Badge, Grid } from "@chakra-ui/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAppContext } from "../AppContext";
 import ResultsEditor from "../ResultsEditor";
 import StopDialog from "../StopDialog";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../components/ui/table";
 import { genArr } from "../utils/array";
 import { getTeamName } from "../utils/string";
 
@@ -17,99 +26,93 @@ const TournamentPage = () => {
   };
 
   return (
-    <>
-      <Stack>
-        <Heading as="h2" fontWeight="bold">
-          Schedule
-        </Heading>
-        <Table.ScrollArea borderWidth="1px">
-          <Table.Root variant="outline" striped={true}>
-            <Table.Header>
-              <Table.Row bg="bg.emphasized">
-                <Table.ColumnHeader>Round</Table.ColumnHeader>
-                {genArr(4).map((t) => (
-                  <Table.ColumnHeader key={t}>{getTeamName(t)}</Table.ColumnHeader>
-                ))}
-                {hasSubs && <Table.ColumnHeader>Subs</Table.ColumnHeader>}
-                <Table.ColumnHeader>Results</Table.ColumnHeader>
-                <Table.ColumnHeader></Table.ColumnHeader>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {schedule.map((round, i) => (
-                <Table.Row key={i}>
-                  <Table.Cell>{i + 1}</Table.Cell>
-                  {round.teams.map((team, j) => (
-                    <Table.Cell key={j}>{team.map((p) => p + 1).join(", ")}</Table.Cell>
-                  ))}
-                  {hasSubs && (
-                    <Table.Cell>{round.subs.map((s) => s + 1).join(", ")}</Table.Cell>
-                  )}
-                  <Table.Cell>
-                    <Stack direction="row">
-                      {results[i].map((res, k) =>
-                        res.length ? (
-                          <Badge key={k} variant="outline">{res.join(" - ")}</Badge>
-                        ) : null,
-                      )}
-                    </Stack>
-                  </Table.Cell>
-                  <Table.Cell width={6}>
-                    <Stack direction="row" justifyContent="end">
-                      <ResultsEditor
-                        round={i}
-                        roundResult={results[i]}
-                        onSave={(result) => setResult(result, i)}
-                        isSubRound={hasSubs && i === results.length - 1}
-                        schedule={schedule}
-                        names={names}
-                      />
-                    </Stack>
-                  </Table.Cell>
-                </Table.Row>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-bold tracking-tight">Schedule</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Round</TableHead>
+              {genArr(4).map((t) => (
+                <TableHead key={t}>{getTeamName(t)}</TableHead>
               ))}
-            </Table.Body>
-          </Table.Root>
-        </Table.ScrollArea>
-      </Stack>
-      <Stack>
-        <Heading as="h2" fontWeight="bold">
-          Scores
-        </Heading>
-        <Table.ScrollArea borderWidth="1px">
-          <Table.Root variant="outline" striped={true}>
-            <Table.Header bg="bg.emphasized">
-              <Table.Row>
-                <Table.ColumnHeader>#</Table.ColumnHeader>
-                <Table.ColumnHeader>Player</Table.ColumnHeader>
-                {schedule.map((_, i) => (
-                  <Table.ColumnHeader key={i}>{i + 1}</Table.ColumnHeader>
+              {hasSubs && <TableHead>Subs</TableHead>}
+              <TableHead>Results</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {schedule.map((round, i) => (
+              <TableRow key={i}>
+                <TableCell>{i + 1}</TableCell>
+                {round.teams.map((team, j) => (
+                  <TableCell key={j}>{team.map((p) => p + 1).join(", ")}</TableCell>
                 ))}
-                <Table.ColumnHeader>Total</Table.ColumnHeader>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {sortedPlayers.map((p) => (
-                <Table.Row key={p.id}>
-                  <Table.Cell>{p.id + 1}</Table.Cell>
-                  <Table.Cell>{p.name || "Unknown"}</Table.Cell>
-                  {p.scores.map((score, j) => (
-                    <Table.Cell key={j}>{score}</Table.Cell>
-                  ))}
-                  <Table.Cell fontWeight="bold">{p.total}</Table.Cell>
-                </Table.Row>
+                {hasSubs && (
+                  <TableCell>{round.subs.map((s) => s + 1).join(", ")}</TableCell>
+                )}
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {results[i].map((res, k) =>
+                      res.length ? (
+                        <Badge key={k} variant="outline">
+                          {res.join(" - ")}
+                        </Badge>
+                      ) : null,
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="w-12">
+                  <div className="flex justify-end">
+                    <ResultsEditor
+                      round={i}
+                      roundResult={results[i]}
+                      onSave={(result) => setResult(result, i)}
+                      isSubRound={hasSubs && i === results.length - 1}
+                      schedule={schedule}
+                      names={names}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-bold tracking-tight">Scores</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>#</TableHead>
+              <TableHead>Player</TableHead>
+              {schedule.map((_, i) => (
+                <TableHead key={i}>{i + 1}</TableHead>
               ))}
-            </Table.Body>
-          </Table.Root>
-        </Table.ScrollArea>
-      </Stack>
-      <Stack gap={3}>
-        <Grid templateColumns="1fr 1fr" gap={3}>
-          <Button onClick={downloadScores}>Download scores</Button>
-          <StopDialog stop={handleStop} />
-        </Grid>
-      </Stack>
-    </>
+              <TableHead>Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedPlayers.map((p) => (
+              <TableRow key={p.id}>
+                <TableCell>{p.id + 1}</TableCell>
+                <TableCell>{p.name || "Unknown"}</TableCell>
+                {p.scores.map((score, j) => (
+                  <TableCell key={j}>{score}</TableCell>
+                ))}
+                <TableCell className="font-bold">{p.total}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Button variant="outline" onClick={downloadScores}>
+          Download scores
+        </Button>
+        <StopDialog stop={handleStop} />
+      </div>
+    </div>
   );
 };
 

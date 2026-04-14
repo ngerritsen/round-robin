@@ -1,5 +1,4 @@
 import { createRouter, createRoute, createRootRoute, Outlet, redirect } from "@tanstack/react-router";
-import { Container, Stack } from "@chakra-ui/react";
 import Header from "./Header";
 import SetupPage from "./pages/SetupPage";
 import TournamentPage from "./pages/TournamentPage";
@@ -7,12 +6,12 @@ import * as Store from "./utils/store";
 
 const rootRoute = createRootRoute({
   component: () => (
-    <Container py={6}>
-      <Stack gap={6}>
+    <div className="mx-auto w-full max-w-4xl px-4 py-6 antialiased">
+      <div className="flex flex-col gap-6">
         <Header />
         <Outlet />
-      </Stack>
-    </Container>
+      </div>
+    </div>
   ),
 });
 
