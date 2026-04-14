@@ -8,8 +8,7 @@ import { cn } from "@/lib/utils";
 
 const Table = forwardRef<HTMLTableElement, HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative overflow-hidden rounded-md border border-border">
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-r from-transparent to-background" />
+    <div className="overflow-hidden rounded-md border border-border">
       <div className="w-full overflow-x-auto">
         <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
       </div>
